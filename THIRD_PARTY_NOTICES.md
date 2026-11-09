@@ -2,7 +2,8 @@
 
 Repository packaging code is Apache-2.0 (LICENSE). This does not relicense the
 image's third-party software. Verification tools and downloaded packages are
-not committed.
+not committed. This file and the packaging LICENSE are also retained in the
+runtime image under `/usr/share/licenses/openresty-ubi/`.
 
 OpenResty's RPM license header says BSD. The platform combines NGINX (BSD-2-Clause),
 OpenResty modules (principally BSD), LuaJIT (MIT), and bundled Lua libraries with

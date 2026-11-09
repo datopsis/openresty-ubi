@@ -24,6 +24,7 @@ COPY --chown=0:0 --chmod=0644 container/nginx.conf /etc/nginx/nginx.conf
 COPY --chown=0:0 --chmod=0644 container/conf.d/default.conf /etc/nginx/conf.d/default.conf
 COPY --chown=0:0 --chmod=0644 container/html/index.html /usr/share/nginx/html/index.html
 COPY --chown=0:0 --chmod=0755 container/entrypoint.sh /usr/local/bin/entrypoint
+COPY --chown=0:0 --chmod=0644 LICENSE THIRD_PARTY_NOTICES.md /usr/share/licenses/openresty-ubi/
 ENV LANG="C.UTF-8" TZ="UTC"
 USER 999:0
 WORKDIR /usr/share/nginx/html
