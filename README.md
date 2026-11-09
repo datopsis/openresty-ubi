@@ -84,7 +84,7 @@ A green status does not replace reading those reports or upstream advisories.
 `.github/workflows/update-locks.yml` generates candidate locks and provenance
 logs on relevant PR changes or manual dispatch, with `contents: read`. It does
 not commit, open PRs, publish, or approve anything. No workflow publishes on tags.
-The Python requirements include filelock 4.2.9, virtualenv 21.14.13, and all
+The Python requirements include filelock 4.2.9, virtualenv 21.15.6, and all
 transitive dependencies with hashes; regeneration is documented in the `.in`.
 
 ## Layout and limits

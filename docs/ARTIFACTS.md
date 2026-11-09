@@ -69,3 +69,6 @@ inputs, not a runtime image. Review the candidate diff, signatures, source and
 license metadata, then replace committed locks through an ordinary reviewed PR.
 Refresh both architectures and rerun image tests/scans. Candidates are never
 automatically committed. Owner review fields are intentionally not fabricated.
+
+CI Python wheels are pinned by SHA-256; no publisher-signature verification
+is claimed for those wheels. Actions are pinned by full Git commit SHA.

@@ -15,3 +15,6 @@ tests
 *.sarif
 *.spdx.json
 grype*.json
+.env
+.env.*
+.artifact-candidate

@@ -16,7 +16,9 @@ not a supported release. No human approval is implied by these descriptions.
    scanner content and tailoring, produce native per-architecture filesystem
    evidence, and distinguish image controls from host/operator controls.
    Include source/secrets analysis, malware evidence, component accountability,
-   and complete license/source redistribution review. Do not claim STIG/FIPS.
+   and complete license/source redistribution review. Enrich and verify SBOM
+   coverage of embedded NGINX/LuaJIT and upstream OpenSSL/PCRE2/zlib; RPM
+   recognition alone is not proof of upstream vulnerability coverage. Do not claim STIG/FIPS.
    The container-hardening criteria are a draft reading reference only; this
    repository has no dependency on its workflows or conformance gates.
 4. **Release signing and publishing design.** With owner authorization, define

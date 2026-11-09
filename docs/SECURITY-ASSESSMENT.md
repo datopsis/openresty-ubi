@@ -30,3 +30,7 @@ Local container build/runtime execution was blocked by Podman's namespace error
 `cannot clone: Operation not permitted`. Local signature, integrity, lock and
 gate tests are independent of that restriction. Native GitHub runs provide
 container evidence; no SELinux/OpenShift/FIPS/STIG claim follows from them.
+
+Native runtime and scanner outcomes, including the four unfixed High CVEs and
+the embedded-component SBOM coverage gap, are recorded in
+[evaluation evidence](evals/2026-11-09-runtime.md). No owner acceptance is implied.
