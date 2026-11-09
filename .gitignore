@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+.artifact-*/
+security-results/
+*.rpm
+*.tar
+*.sarif
+*.spdx.json
+.env
+.env.*

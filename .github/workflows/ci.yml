@@ -1,0 +1,121 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.13'
+      - name: Install complete hash-pinned lint environment
+        run: >-
+          python -m pip install --require-hashes --only-binary=:all: -r .github/requirements/pre-commit.txt
+      - run: pre-commit run --all-files --show-diff-on-failure
+      - run: python -m unittest discover -s tests -p 'test_*.py' -v
+  image:
+    name: image (${{ matrix.architecture }})
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: amd64
+            runner: ubuntu-24.04
+            machine: x86_64
+          - architecture: arm64
+            runner: ubuntu-24.04-arm
+            machine: aarch64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    env:
+      ARCHITECTURE: ${{ matrix.architecture }}
+      EXPECTED_MACHINE: ${{ matrix.machine }}
+      IMAGE: localhost/openresty-ubi:test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Confirm native runner and tools
+        run: |
+          test "$(uname -m)" = "${EXPECTED_MACHINE}"
+          podman version
+          rpm --version
+          gpg --version
+      - name: Acquire and verify complete RPM closure
+        run: |
+          python scripts/artifacts.py acquire --lock "artifacts/locks/${ARCHITECTURE}.json" --output ".artifact-bundle/${ARCHITECTURE}"
+          bash scripts/verify-rpm-bundle.sh "artifacts/locks/${ARCHITECTURE}.json" ".artifact-bundle/${ARCHITECTURE}"
+          python tests/rpm-bundle-negative.py --lock "artifacts/locks/${ARCHITECTURE}.json" --bundle ".artifact-bundle/${ARCHITECTURE}"
+      - name: Assemble offline from pinned inputs
+        run: bash scripts/build-image.sh "${ARCHITECTURE}" "${IMAGE}"
+      - name: Native Podman runtime tests
+        env:
+          CONTAINER_RUNTIME: podman
+        run: bash tests/smoke.sh
+      - name: Load Docker compatibility image
+        run: |
+          podman save --format docker-archive --output /tmp/image.tar "${IMAGE}"
+          docker load --input /tmp/image.tar
+          rm /tmp/image.tar
+          test "$(docker image inspect --format '{{.Architecture}}' "${IMAGE}")" = "${ARCHITECTURE}"
+      - name: Native Docker runtime tests
+        env:
+          CONTAINER_RUNTIME: docker
+        run: bash tests/smoke.sh
+      - run: mkdir -p security-results
+      - name: Generate SPDX SBOM
+        id: sbom
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          image: ${{ env.IMAGE }}
+          format: spdx-json
+          output-file: security-results/image.spdx.json
+          syft-version: v1.51.1
+          upload-artifact: false
+          upload-release-assets: false
+      - name: Record all Trivy findings including unfixed
+        if: ${{ !cancelled() && steps.sbom.outcome == 'success' }}
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.70.0
+          image-ref: ${{ env.IMAGE }}
+          scanners: vuln
+          format: json
+          output: security-results/trivy-all.json
+          exit-code: '0'
+          ignore-unfixed: false
+      - name: Record all Grype findings including unfixed
+        if: ${{ !cancelled() && steps.sbom.outcome == 'success' }}
+        uses: anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439 # v7.4.2
+        with:
+          sbom: security-results/image.spdx.json
+          output-format: json
+          output-file: security-results/grype-all.json
+          severity-cutoff: negligible
+          only-fixed: false
+          fail-build: false
+          grype-version: v0.118.0
+      - name: Block fixed High and Critical findings from both scanners
+        if: ${{ !cancelled() && steps.sbom.outcome == 'success' }}
+        run: python scripts/scan-gate.py security-results
+      - name: Retain SBOM and complete findings even on failure
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: image-security-${{ matrix.architecture }}
+          path: security-results/
+          if-no-files-found: error
+          retention-days: 14
