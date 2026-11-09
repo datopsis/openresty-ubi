@@ -41,7 +41,9 @@ using the pinned Red Hat release keys and checking the signed digest and
 repository identity. RPM publisher signatures are verified. No unsigned upstream
 tarball is used as a build input. The first local locks were resolved with DNF
 4.14 on Debian because namespace creation prevents running a UBI resolver here;
-CI's update workflow independently proposes native UBI-resolved candidates.
+CI's native UBI update workflow independently produced candidates with identical
+inputs on both architectures (only generated_at differed), in
+[run 42608968026](https://github.com/datopsis/openresty-ubi/actions/runs/42608968026).
 
 ## Refresh
 

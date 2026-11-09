@@ -10,9 +10,7 @@ RUN test -n "${ARTIFACT_LOCK_SHA256}" \
     && /usr/local/bin/install-rpm-bundle /bundle /runtime \
     && rm -rf /runtime/etc/yum.repos.d /runtime/etc/pki/rpm-gpg \
        /runtime/run/* /runtime/tmp/* /runtime/var/cache/* /runtime/var/log/* \
-    && find /runtime -type f -perm /6000 -exec chmod a-s {} + \
-    && mkdir -p /runtime/tmp/openresty \
-    && chmod 0755 /runtime/tmp/openresty
+    && find /runtime -type f -perm /6000 -exec chmod a-s {} +
 FROM ${UBI_MICRO_IMAGE}
 LABEL org.opencontainers.image.title="OpenResty on Red Hat UBI 9" \
       org.opencontainers.image.source="https://github.com/datopsis/openresty-ubi" \
