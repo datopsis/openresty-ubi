@@ -1,0 +1,92 @@
+name: Update artifact locks
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - artifacts/lock-inputs.json
+      - scripts/fetch-lock-inputs.py
+      - scripts/resolve-lock.sh
+      - scripts/render-lock.py
+      - scripts/verify-bases.py
+      - scripts/artifacts.py
+      - scripts/verify-rpm-bundle.sh
+      - artifacts/locks/**
+      - .github/workflows/update-locks.yml
+
+permissions:
+  contents: read
+
+jobs:
+  resolve:
+    name: resolve (${{ matrix.architecture }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: amd64
+            runner: ubuntu-24.04
+          - architecture: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    env:
+      ARCHITECTURE: ${{ matrix.architecture }}
+    steps:
+      - name: Check out proposed inputs
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Fetch and verify publisher seeds
+        run: >-
+          python scripts/fetch-lock-inputs.py
+          --inputs artifacts/lock-inputs.json
+          --architecture "${ARCHITECTURE}"
+          --output ".artifact-inputs/${ARCHITECTURE}"
+
+      - name: Resolve in the pinned UBI builder
+        run: |
+          mkdir -p .artifact-resolver
+          resolver_image=$(python -c 'import json; print(json.load(open("artifacts/lock-inputs.json"))["base_images"]["builder"])')
+          python scripts/verify-bases.py --architecture "${ARCHITECTURE}" --keys ".artifact-inputs/${ARCHITECTURE}/keys"
+          podman pull "${resolver_image}"
+          podman version > .artifact-resolver/resolver-platform.txt
+          uname -a >> .artifact-resolver/resolver-platform.txt
+          sha256sum artifacts/lock-inputs.json >> .artifact-resolver/resolver-platform.txt
+          podman run --rm --volume "${PWD}:/work:Z" --workdir /work \
+            --entrypoint bash "${resolver_image}" \
+            -c 'set -e; rpm -q microdnf rpm; bash scripts/resolve-lock.sh "$1" ".artifact-inputs/$1" ".artifact-resolver/$1"; dnf --version; dnf repolist -v' \
+            -- "${ARCHITECTURE}" 2>&1 | tee .artifact-resolver/resolver.log
+
+      - name: Render candidate and record component headers
+        run: |
+          python scripts/render-lock.py \
+            --inputs artifacts/lock-inputs.json \
+            --architecture "${ARCHITECTURE}" \
+            --binary-inventory ".artifact-resolver/${ARCHITECTURE}/binary-inventory.tsv" \
+            --source-inventory ".artifact-resolver/${ARCHITECTURE}/source-inventory.tsv" \
+            --output ".artifact-resolver/${ARCHITECTURE}.json"
+          rpm -qp --queryformat '%{NAME}\t%{LICENSE}\t%{SOURCERPM}\t%{VENDOR}\n' \
+            .artifact-resolver/"${ARCHITECTURE}"/rpms/*.rpm \
+            | sort > .artifact-resolver/component-headers.tsv
+
+      - name: Verify every candidate RPM against the publisher keys
+        run: |
+          python scripts/artifacts.py acquire --lock ".artifact-resolver/${ARCHITECTURE}.json" --output ".artifact-candidate/${ARCHITECTURE}"
+          bash scripts/verify-rpm-bundle.sh ".artifact-resolver/${ARCHITECTURE}.json" ".artifact-candidate/${ARCHITECTURE}"
+
+      - name: Retain candidates for independent review
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: lock-candidate-${{ github.sha }}-${{ matrix.architecture }}
+          path: |
+            .artifact-resolver/*.json
+            .artifact-resolver/*.tsv
+            .artifact-resolver/*.txt
+            .artifact-resolver/*.log
+            .artifact-resolver/*/*-inventory.tsv
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
