@@ -1,7 +1,7 @@
 # OpenResty on Red Hat UBI 9
 
 Security-oriented, rootless OpenResty **1.31.8.1**, embedding NGINX **1.31.8**
-and LuaJIT, on digest-pinned UBI **9.8 Minimal/Micro**. Development increment;
+and LuaJIT, on digest-pinned UBI **9.9 Minimal/Micro**. Development increment;
 no released image or supported platform. Repository code is Apache-2.0;
 packaged components retain their own licenses (see THIRD_PARTY_NOTICES.md).
 

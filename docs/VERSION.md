@@ -1,7 +1,7 @@
 # Versions
 
 Current upstream input: OpenResty 1.31.8.1 (`0:1.31.8.1-1.el9`), embedding
-NGINX 1.31.8. Base line: UBI 9.8; exact manifest digests and package versions
+NGINX 1.31.8. Base line: UBI 9.9; exact manifest digests and package versions
 live in artifacts/. These are dependency selections, not a container release.
 
 Future container tags follow the nearest sibling's upstream-derived format:

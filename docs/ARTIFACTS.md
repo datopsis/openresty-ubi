@@ -45,6 +45,25 @@ CI's native UBI update workflow independently produced candidates with identical
 inputs on both architectures (only generated_at differed), in
 [run 42608968026](https://github.com/datopsis/openresty-ubi/actions/runs/42608968026).
 
+## UBI publication and refresh (2026-11-13 UTC)
+
+The previously stalled refresh can now complete: public UBI repositories expose
+util-linux-family 2.37.4-28.el9_9.1 for both architectures. The installability
+gate correctly blocks the old locks instead of deferring published fixes.
+`artifacts/ubi.repo` is shared by lock resolution and availability queries.
+
+Updated official UBI 9.9 manifest lists (`latest` and `9.9` agreed):
+
+| Base | Manifest-list digest |
+| --- | --- |
+| ubi-minimal | `sha256:baafce2d34783a28b4a472779f304e97e00f9d35c99553bc53b068b14344d9a9` |
+| ubi-micro | `sha256:dbd325b96bcd432dd42816d31412bdf1dc0fb973b79ed310344bc23c76c068db` |
+
+Both contain linux/amd64 and linux/arm64 manifests. Native CI verifies each
+architecture manifest's Red Hat publisher signature and every locked RPM's
+signature, hash and metadata before building. The original selection above is
+retained as historical evidence; the current pins are in artifacts/.
+
 ## Refresh
 
 Edit reviewed seeds, keys, versions and base digests in `artifacts/lock-inputs.json`.
