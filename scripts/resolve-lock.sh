@@ -28,20 +28,7 @@ if command -v microdnf >/dev/null; then
 fi
 repo_dir=$(mktemp -d)
 trap 'rm -rf -- "${repo_dir}" "${resolve_root:-}"' EXIT
-for component in baseos appstream codeready-builder; do
-    cat >>"${repo_dir}/locked.repo" <<EOF
-[ubi-9-${component}-rpms]
-name=UBI ${component}
-baseurl=https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/${rpm_architecture}/${component}/os/
-enabled=1
-gpgcheck=1
-[ubi-9-${component}-source-rpms]
-name=UBI ${component} sources
-baseurl=https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/${rpm_architecture}/${component}/source/SRPMS/
-enabled=0
-gpgcheck=1
-EOF
-done
+cp "$(dirname "${BASH_SOURCE[0]}")/../artifacts/ubi.repo" "${repo_dir}/locked.repo"
 cat >>"${repo_dir}/locked.repo" <<EOF
 [openresty-stable]
 name=OpenResty

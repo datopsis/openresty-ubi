@@ -167,7 +167,7 @@ def validate_inputs(path: Path) -> dict:
         fail("only lock schema and bundle version 1 are supported")
     require_string(value["openresty_version"], "OpenResty version")
     require_string(value["openresty_rpm_version"], "OpenResty RPM version")
-    if value["ubi_release"] != "9.8":
+    if value["ubi_release"] != "9.9":
         fail("lock inputs must use the reviewed UBI release")
     if not isinstance(value["base_images"], dict):
         fail("base_images must be an object")

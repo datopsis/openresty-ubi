@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - artifacts/lock-inputs.json
+      - artifacts/ubi.repo
       - scripts/fetch-lock-inputs.py
       - scripts/resolve-lock.sh
       - scripts/render-lock.py

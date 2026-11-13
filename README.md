@@ -1,7 +1,7 @@
 # OpenResty on Red Hat UBI 9
 
 Security-oriented, rootless OpenResty **1.31.8.1**, embedding NGINX **1.31.8**
-and LuaJIT, on digest-pinned UBI **9.8 Minimal/Micro**. Development increment;
+and LuaJIT, on digest-pinned UBI **9.9 Minimal/Micro**. Development increment;
 no released image or supported platform. Repository code is Apache-2.0;
 packaged components retain their own licenses (see THIRD_PARTY_NOTICES.md).
 
@@ -76,7 +76,10 @@ python3 -m unittest discover -s tests -p 'test_*.py' -v
 CI runs lint and native amd64/arm64 builds, real Podman and Docker runtime
 checks, signature/tampering negatives, an SPDX SBOM, and Trivy/Grype scans.
 `scripts/scan-gate.py` **fails** on either scanner's fixed High/Critical
-findings. It also fails on missing/malformed reports. Complete JSON reports
+findings, except when a successful query proves the fix is not yet available
+from the shared UBI repositories. Errors fail closed. See [SECURITY](SECURITY.md)
+for the installability rule, deferred summaries and scheduled tracking issue.
+It also fails on missing/malformed reports. Complete JSON reports
 retain unfixed findings and are uploaded even when the gate fails. Unit tests
 prove the gate rejects synthetic fixed findings from each scanner independently.
 A green status does not replace reading those reports or upstream advisories.

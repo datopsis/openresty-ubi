@@ -16,8 +16,9 @@ RPM-bundle assembly. Preserve these non-negotiable properties:
 - No credentials, private keys, or default passwords in images or examples.
   Unsafe upstream defaults fail closed with a documented explicit opt-out.
 - No FIPS, STIG, certification, or platform-support claims without evidence.
-- Both Trivy and Grype block fixed High/Critical findings on both native
-  architectures. Unfixed findings remain visible. Never weaken a check to pass.
+- Both Trivy and Grype enforce SECURITY.md's owner-approved UBI installability
+  rule for High/Critical findings on both native architectures. Unfixed and
+  deferred findings remain visible. Never weaken a check to pass.
 - Complete hash-pinned CI requirements include their `.in` input and transitive
   dependencies. Actions use full commit SHAs. Lock refresh proposes artifacts
   for review with read-only permissions; it never commits or opens PRs.

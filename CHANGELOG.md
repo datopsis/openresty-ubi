@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Complete the previously blocked lock refresh now that UBI publishes the fixes:
+  update both signed RPM closures and pin the official UBI 9.9 Minimal/Micro bases.
+
+- Apply the owner's UBI installability rule to fixed High/Critical RPM findings:
+  block published fixes, report publication-pending fixes, and fail closed on
+  query/metadata/version errors. Non-RPM and non-UBI findings still block.
+- Share reviewed UBI repository definitions between resolution and scanning;
+  retain per-architecture availability evidence and deferred job summaries.
+- Check both native architectures every six hours and maintain one tracking
+  issue with notifications when availability or gate state changes.
+
 ### Added
 
 - Rootless OpenResty 1.31.8.1 (NGINX 1.31.8 + LuaJIT) on pinned UBI 9.8.
