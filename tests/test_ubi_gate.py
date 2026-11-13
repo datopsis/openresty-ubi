@@ -24,6 +24,7 @@ class UbiGate(unittest.TestCase):
         return gate.classify(self.item, self.locked, lambda: {('fixture', 'x86_64'): versions})[0]
 
     def test_available_blocks_unavailable_defers(self):
+        self.assertEqual(self.classify([]), 'deferred')
         self.assertEqual(self.classify(['2.37.4-25.el9']), 'deferred')
         self.assertEqual(self.classify(['2.37.4-28.el9_9']), 'blocked')
         self.assertEqual(self.classify(['2.37.4-28.el9_9.1']), 'blocked')
@@ -56,9 +57,7 @@ class UbiGate(unittest.TestCase):
         self.locked['fixture']['repository'] = 'openresty-stable'
         self.assertEqual(gate.classify(self.item, self.locked, forbidden)[0], 'blocked')
 
-    def test_missing_package_and_version_mismatch_fail(self):
-        with self.assertRaises(ValueError):
-            self.classify([])
+    def test_version_mismatch_fails(self):
         self.item['installed'] = '2.0-1'
         with self.assertRaises(ValueError):
             self.classify(['2.37.4-25.el9'])

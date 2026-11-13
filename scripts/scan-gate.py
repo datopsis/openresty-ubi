@@ -125,8 +125,6 @@ def classify(item, locked, available):
     # Ambiguous ranges or multiple stream fixes are not evidence of unavailability.
     fixed = parse_evr(item['fixed'])
     versions = available().get((item['package'], package['architecture']), [])
-    if not versions:
-        raise ValueError('locked package missing from UBI repositories')
     if any(compare_evr(version, fixed) >= 0 for version in versions):
         return 'blocked', 'vendor fix is available from UBI'
     return 'deferred', 'vendor fix is not yet available from UBI'

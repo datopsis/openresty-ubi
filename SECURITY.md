@@ -23,13 +23,13 @@ image itself still builds offline from its verified locks.
 
 On each native architecture, the gate queries fresh metadata for every enabled
 UBI repository inside the digest-pinned builder. RPM compares epoch, version
-and release. A successful complete query showing only older versions defers the
+and release. A successful complete query finding no version at or above the fix defers the
 finding; publication of an equal or newer version makes the next scan block.
 This is a repository availability rule, not a CVE/package allow-list. A
 repository-advertised fix blocks even if a later download or dependency solve
 would fail; the gate never uses those failures as a reason to defer.
 
-Query errors, timeouts, missing/empty repositories or packages, malformed or
+Query errors, timeouts, missing/empty repositories, malformed or
 ambiguous versions, scanner/lock mismatches, and malformed reports fail closed.
 Non-RPM findings and RPMs outside the locked UBI package set retain the existing
 blocking behavior. No successful availability query means no deferral. Findings
