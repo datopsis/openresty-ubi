@@ -1,0 +1,41 @@
+[ubi-9-baseos-rpms]
+name=UBI baseos
+baseurl=https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/$basearch/baseos/os/
+enabled=1
+gpgcheck=1
+skip_if_unavailable=0
+
+[ubi-9-baseos-source-rpms]
+name=UBI baseos sources
+baseurl=https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/$basearch/baseos/source/SRPMS/
+enabled=0
+gpgcheck=1
+skip_if_unavailable=0
+
+[ubi-9-appstream-rpms]
+name=UBI appstream
+baseurl=https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/$basearch/appstream/os/
+enabled=1
+gpgcheck=1
+skip_if_unavailable=0
+
+[ubi-9-appstream-source-rpms]
+name=UBI appstream sources
+baseurl=https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/$basearch/appstream/source/SRPMS/
+enabled=0
+gpgcheck=1
+skip_if_unavailable=0
+
+[ubi-9-codeready-builder-rpms]
+name=UBI codeready-builder
+baseurl=https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/$basearch/codeready-builder/os/
+enabled=1
+gpgcheck=1
+skip_if_unavailable=0
+
+[ubi-9-codeready-builder-source-rpms]
+name=UBI codeready-builder sources
+baseurl=https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9/$basearch/codeready-builder/source/SRPMS/
+enabled=0
+gpgcheck=1
+skip_if_unavailable=0

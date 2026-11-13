@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '23 */6 * * *'
 permissions:
   contents: read
 concurrency:
@@ -24,6 +26,8 @@ jobs:
         run: >-
           python -m pip install --require-hashes --only-binary=:all: -r .github/requirements/pre-commit.txt
       - run: pre-commit run --all-files --show-diff-on-failure
+      - name: Install RPM comparison tool for gate tests
+        run: sudo apt-get update && sudo apt-get install -y rpm
       - run: python -m unittest discover -s tests -p 'test_*.py' -v
   image:
     name: image (${{ matrix.architecture }})
@@ -108,9 +112,18 @@ jobs:
           only-fixed: false
           fail-build: false
           grype-version: v0.118.0
-      - name: Block fixed High and Critical findings from both scanners
+      - name: Block High and Critical fixes installable from UBI
         if: ${{ !cancelled() && steps.sbom.outcome == 'success' }}
-        run: python scripts/scan-gate.py security-results
+        run: bash scripts/check-vulnerabilities.sh "${ARCHITECTURE}"
+      - name: Summarize deferred and blocking findings
+        if: ${{ always() && steps.sbom.outcome == 'success' }}
+        run: |
+          if test -f security-results/gate-summary.md; then
+            cat security-results/gate-summary.md >> "${GITHUB_STEP_SUMMARY}"
+          else
+            echo "BLOCKED: availability gate did not produce a report" >> "${GITHUB_STEP_SUMMARY}"
+            exit 1
+          fi
       - name: Retain SBOM and complete findings even on failure
         if: ${{ always() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -119,3 +132,38 @@ jobs:
           path: security-results/
           if-no-files-found: error
           retention-days: 14
+  track-vulnerabilities:
+    name: Track UBI fix availability
+    needs: [lint, image]
+    if: >-
+      ${{ always() && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+          (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    concurrency:
+      group: ubi-fix-tracking
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Collect both architecture reports
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p tracking-results
+          if ! gh run download "${GITHUB_RUN_ID}" --repo "${GITHUB_REPOSITORY}" \
+              --pattern 'image-security-*' --dir tracking-results; then
+            echo "Missing artifacts will be reported as blocked by the tracker."
+          fi
+      - name: Update one issue and notify on state changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python3 scripts/track-vulnerabilities.py tracking-results
+          --repository "${GITHUB_REPOSITORY}"
+          --run-url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
